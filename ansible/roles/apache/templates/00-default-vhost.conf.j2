@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+<VirtualHost *:80>
+    ServerName {{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    DocumentRoot {{ webserver_root}}
+    <Directory {{ webserver_root }}>
+        Options Indexes FollowSymLinks MultiViews
+        #AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+</VirtualHost>

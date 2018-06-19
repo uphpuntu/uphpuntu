@@ -1,0 +1,21 @@
+---
+
+- name: install Redis packages
+  apt: pkg={{ item }} state=latest
+  become: yes
+  with_items:
+    - redis-tools
+    - redis
+
+- name: Configure Redis
+  lineinfile: >
+    dest=/etc/redis/redis.conf
+    regexp="{{ item.key }}"
+    line="{{ item.value }}"
+    state=present
+  with_items:
+   - { key: "^bind 127.0.0.1 ::1", value: "#bind 127.0.0.1 ::1" }
+   - { key: "^protected-mode yes", value: "protected-mode no" }
+  notify:
+    - redis-restart
+  become: yes

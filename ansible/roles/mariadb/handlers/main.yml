@@ -1,0 +1,13 @@
+---
+
+- name: mariadb-start
+  service: name=mariadb state=started
+  become: yes
+
+- name: mariadb-restart
+  service: name=mariadb state=restarted
+  become: yes
+
+- name: mysql-reload
+  service: name=mariadb state=reloaded
+  become: yes

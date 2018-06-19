@@ -1,0 +1,37 @@
+---
+
+- name: Get Adminer
+  get_url:
+    url: https://github.com/vrana/adminer/releases/download/v4.6.2/adminer-4.6.2.php
+    dest: /tmp
+
+- name: Make sure ~/www/adminer exists
+  file: dest={{ webserver_root }}/adminer owner={{ webserver_user }} group={{ webserver_group }} state=directory
+  become: yes
+
+- name: Copy Adminer
+  become: yes
+  copy:
+    src: "/tmp/adminer-4.6.2.php"
+    dest: "{{ webserver_root }}/adminer/index.php"
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group}}"
+
+- name: Push default virtualhost configuration template
+  template:
+    src=02-adminer.conf.j2
+    dest=/etc/apache2/sites-available/02-adminer.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable Vhost
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 02-adminer
+  become: yes
+  notify:
+  - apache-reload

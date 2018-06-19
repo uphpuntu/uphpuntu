@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+<VirtualHost *:80>
+    ServerName shopware.{{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    DocumentRoot {{ webserver_root}}/{{ shopware_folder }}
+    <Directory {{ webserver_root }}/{{ shopware_folder }}>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog /var/log/uphpuntu/shopware.access.log common
+    ErrorLog /var/log/uphpuntu/shopware.error.log
+</VirtualHost>
+<VirtualHost *:443>
+    ServerName shopware.{{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    SSLEngine On
+    SSLCertificateFile /etc/apache2/ssl/shopware.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/shopware.key
+
+    DocumentRoot {{ webserver_root}}/{{ shopware_folder }}
+    <Directory {{ webserver_root }}/{{ shopware_folder }}>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog /var/log/uphpuntu/shopware.access.log common
+    ErrorLog /var/log/uphpuntu/shopware.error.log
+</VirtualHost>

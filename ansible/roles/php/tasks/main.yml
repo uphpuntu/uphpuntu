@@ -1,0 +1,63 @@
+---
+
+- name: 
+  shell: LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+  become: yes
+
+- name: update apt cache
+  command: apt-get update warn=False
+  become: yes
+
+- name: Install PHP-FPM
+  when: webserver == "nginx"
+  apt: pkg=php{{ item }}-fpm state=present
+  become: yes
+  with_items:
+  - "{{ php_versions }}"
+
+- name: Install PHP Mod Apache
+  when: webserver == "apache"
+  apt: pkg=libapache2-mod-php{{ item }} state=present
+  become: yes
+  with_items:
+  - "{{ php_versions }}"
+
+- name: Install PHP Packages
+  command: apt-get install -y php{{ item }}-mysql php{{ item }}-cli php{{ item }}-curl php{{ item }}-gd php{{ item }}-mbstring php{{ item }}-xml php{{ item }}-simplexml php{{ item }}-zip php{{ item }}-xdebug warn=False
+  become: yes
+  with_items:
+    - "{{ php_versions }}"
+
+- name: Make sure webserver_root exists
+  file:
+    path={{ webserver_root }}
+    state=directory
+    group={{ webserver_group }}
+    owner={{ webserver_user }}
+  become: yes
+
+- name: Copy info.php
+  template: src={{ item }} dest={{ webserver_root }}/{{ item }} owner={{ webserver_user }} group={{ webserver_group }} mode=0644
+  become: yes
+  with_items:
+    - info.php
+
+- name: Configure PHP-CLI
+  template: src=../../common/templates/99-debug.ini dest=/etc/php/{{ item }}/cli/conf.d/99-debug.ini owner=root group=root mode=0644
+  with_items:
+    - "{{ php_versions }}"
+  become: yes
+
+- name: Configure PHP
+  when: webserver == "apache"
+  template: src=../../common/templates/99-debug.ini dest=/etc/php/{{ item }}/apache2/conf.d/99-debug.ini owner=root group=root mode=0644
+  with_items:
+    - "{{ php_versions }}"
+  become: yes
+  notify:
+    - apache-restart
+
+- name: Set PHP version
+  when: webserver == "apache"
+  command: /home/{{ webserver_user }}/bin/changephp_apache_{{ php_default_version }}.sh
+  become: yes

@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+<VirtualHost *:80>
+    ServerName {{ drupal_subdomain }}.{{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    DocumentRoot {{ webserver_root}}/{{ drupal_folder }}
+    <Directory {{ webserver_root }}/{{ drupal_folder }}>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog /var/log/uphpuntu/{{ drupal_subdomain }}.access.log common
+    ErrorLog /var/log/uphpuntu/{{ drupal_subdomain }}.error.log
+</VirtualHost>

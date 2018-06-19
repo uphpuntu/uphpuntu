@@ -1,0 +1,56 @@
+---
+
+- name: apply common configuration to all nodes
+  hosts: all
+  roles:
+    - common
+    - {
+        role: ohmyzsh,
+        when: ohmyzsh_install == "yes"
+    }
+    - nano
+    - {
+        role: apache,
+        when: webserver == "apache"
+    }
+    - php
+    - {
+        role: mysql,
+        when: dbms == "mysql"
+    }
+    - {
+        role: mariadb,
+        when: dbms == "mariadb"
+    }
+    - composer
+    - {
+        role: adminer,
+        when: adminer_install == "yes"
+    }
+    - {
+        role: pimpmylog,
+        when: pimpmylog_install == "yes"
+    }
+    - {
+        role: shopware,
+        when: shopware_install == "yes"
+    }
+    - {
+        role: wordpress,
+        when: wordpress_install == "yes"
+    }
+    - {
+        role: drupal,
+        when: drupal_install == "yes"
+    }
+    - nodejs
+    - yarn
+    - grunt
+    - {
+        role: elasticsearch,
+        when: elasticsearch_install == "yes"
+    }
+    - {
+        role: redis,
+        when: redis_install == "yes"
+    }

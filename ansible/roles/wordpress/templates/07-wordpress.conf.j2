@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+<VirtualHost *:80>
+    ServerName {{ wordpress_subdomain }}.{{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    DocumentRoot {{ webserver_root}}/{{ wordpress_folder }}
+    <Directory {{ webserver_root }}/{{ wordpress_folder }}>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog /var/log/uphpuntu/{{ wordpress_subdomain }}.access.log common
+    ErrorLog /var/log/uphpuntu/{{ wordpress_subdomain }}.error.log
+</VirtualHost>

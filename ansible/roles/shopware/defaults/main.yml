@@ -1,0 +1,9 @@
+---
+
+shopware_install_mode: demo
+shopware_folder: shopware
+shopware_db_host: localhost
+shopware_db_port: 3306
+shopware_db_username: shopware
+shopware_db_password: shopware
+shopware_db_name: shopware

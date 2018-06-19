@@ -1,0 +1,19 @@
+---
+
+- name: Install nano package
+  become: yes
+  apt:
+    name: "{{ item }}"
+    state: latest
+    install_recommends: no
+    update_cache: yes
+    cache_valid_time: 86400
+  with_items:
+    - nano
+
+- name: Creating new ~/.nanorc
+  become: yes
+  template:
+    src: .nanorc.j2
+    dest: "{{ item.home }}/.nanorc"
+  with_items: "{{ ohmyzsh_users }}"

@@ -1,0 +1,59 @@
+---
+
+- name: download Drupal
+  when: drupal_install_mode == "clean"
+  get_url:
+    url: https://ftp.drupal.org/files/projects/drupal-{{ drupal_version }}.zip
+    dest: /tmp/drupal.zip
+    mode: 0755
+
+- name: Remove Drupal Source
+  become: yes
+  shell: rm -rf {{ webserver_root }}/{{ drupal_folder }}
+
+- name: unzip Drupal
+  when: drupal_install_mode == "clean"
+  command: unzip /tmp/drupal.zip -d {{ webserver_root }}/{{ drupal_folder }}
+
+- name: Make the user own the directory
+  file:
+    path: "{{ webserver_root }}/{{ drupal_folder }}"
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group }}"
+    state: directory
+    recurse: yes
+  become: yes
+
+- name: Push Drupal virtualhost configuration template
+  template:
+    src=08-drupal.conf.j2
+    dest=/etc/apache2/sites-available/08-drupal.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable Vhost
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 08-drupal
+  become: yes
+  notify:
+    - apache-reload
+
+- name: Create drupal db
+  when: dbms == "mysql"
+  mysql_db: name={{ drupal_db_name }} state=present
+  become: yes
+
+- name: Create drupal db user
+  when: dbms == "mysql"
+  mysql_user:
+    name: "{{ drupal_db_username }}"
+    password: "{{ drupal_db_password }}"
+    priv: "{{ drupal_db_name }}.*:ALL"
+    host: localhost
+    state: present
+  become: yes

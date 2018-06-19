@@ -1,0 +1,17 @@
+---
+
+- name: Add key for the yarn apt-get repository
+  shell: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - warn=False
+  become: yes
+
+- name: Add the yarn repository
+  shell: echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  become: yes
+
+- name: update apt cache
+  command: apt-get update warn=False
+  become: yes
+
+- name: Install yarn
+  apt: pkg=yarn state=present
+  become: yes

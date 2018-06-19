@@ -1,0 +1,59 @@
+---
+
+- name: download Wordpress
+  when: wordpress_install_mode == "clean"
+  get_url:
+    url: https://wordpress.org/latest.zip
+    dest: /tmp/wordpress.zip
+    mode: 0755
+
+- name: Remove Shopware Source
+  become: yes
+  shell: rm -rf {{ webserver_root }}/{{ wordpress_folder }}
+
+- name: unzip Wordpress
+  when: wordpress_install_mode == "clean"
+  command: unzip /tmp/wordpress.zip -d {{ webserver_root }}/{{ wordpress_folder }}
+
+- name: Make the user own the directory
+  file:
+    path: "{{ webserver_root }}/{{ wordpress_folder }}"
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group }}"
+    state: directory
+    recurse: yes
+  become: yes
+
+- name: Push Wordpress virtualhost configuration template
+  template:
+    src=07-wordpress.conf.j2
+    dest=/etc/apache2/sites-available/07-wordpress.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable Vhost
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 07-wordpress
+  become: yes
+  notify:
+    - apache-reload
+
+- name: Create wordpress db
+  when: dbms == "mysql"
+  mysql_db: name={{ wordpress_db_name }} state=present
+  become: yes
+
+- name: Create wordpress db user
+  when: dbms == "mysql"
+  mysql_user:
+    name: "{{ wordpress_db_username }}"
+    password: "{{ wordpress_db_password }}"
+    priv: "{{ wordpress_db_name }}.*:ALL"
+    host: localhost
+    state: present
+  become: yes

@@ -1,0 +1,10 @@
+---
+
+wordpress_install_mode: clean
+wordpress_folder: wordpress
+wordpress_subdomain: wordpress
+wordpress_db_host: localhost
+wordpress_db_port: 3306
+wordpress_db_username: wordpress
+wordpress_db_password: wordpress
+wordpress_db_name: wordpress

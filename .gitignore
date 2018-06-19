@@ -1,0 +1,7 @@
+.idea/
+.vagrant/
+www/*
+.DS_Store
+ansible/playbook.retry
+ansible/bobtools
+ubuntu-bionic-18.04-cloudimg-console.log

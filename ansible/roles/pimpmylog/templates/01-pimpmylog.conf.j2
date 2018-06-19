@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+<VirtualHost *:80>
+    ServerName log.{{ ansible_fqdn }}
+    ServerAdmin admin@localhost
+
+    DocumentRoot {{ webserver_root}}/pimpmylog
+    <Directory {{ webserver_root }}/pimpmylog>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    CustomLog /var/log/uphpuntu/pml.access.log common
+    ErrorLog /var/log/uphpuntu/pml.error.log
+</VirtualHost>

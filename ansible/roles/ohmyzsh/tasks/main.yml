@@ -1,0 +1,51 @@
+---
+
+- name: Install zsh package
+  become: yes
+  apt:
+    name: "{{ item }}"
+    state: latest
+    install_recommends: no
+    update_cache: yes
+    cache_valid_time: 86400
+  with_items:
+    - zsh
+    - zsh-antigen
+
+- name: Cloning oh-my-zsh
+  become: yes
+  git:
+    repo: https://github.com/robbyrussell/oh-my-zsh
+    dest: "{{ item.home }}/.oh-my-zsh"
+  with_items: "{{ ohmyzsh_users }}"
+
+- name: Set permissions for oh-my-zsh
+  become: yes
+  file:
+    path: "{{ item.home }}/.oh-my-zsh"
+    state: directory
+    recurse: yes
+    owner: "{{ item.username }}"
+    group: "{{ item.usergroup }}"
+  with_items: "{{ ohmyzsh_users }}"
+
+# - name: add syntax highlighting plugin
+#   git:
+#     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+#     dest: "{{ item.home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+#   with_items: "{{ ohmyzsh_users }}"
+
+- name: Creating new ~/.zshrc
+  become: yes
+  template:
+    src: .zshrc.j2
+    dest: "{{ item.home }}/.zshrc"
+  with_items: "{{ ohmyzsh_users }}"
+  tags: ohmyzsh_config
+
+- name: Ensure user is using zsh shell
+  become: yes
+  user:
+    name: "{{ item.username }}"
+    shell: /bin/zsh
+  with_items: "{{ ohmyzsh_users }}"

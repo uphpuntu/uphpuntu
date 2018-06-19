@@ -1,0 +1,6 @@
+---
+
+- name: Install Redis Commander
+  npm: name=redis-commander global=yes
+  become: yes
+  become_method: sudo

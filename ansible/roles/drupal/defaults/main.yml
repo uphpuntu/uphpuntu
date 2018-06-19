@@ -1,0 +1,11 @@
+---
+
+drupal_version: 8.5.3
+drupal_install_mode: clean
+drupal_folder: drupal
+drupal_subdomain: drupal
+drupal_db_host: localhost
+drupal_db_port: 3306
+drupal_db_username: drupal
+drupal_db_password: drupal
+drupal_db_name: drupal

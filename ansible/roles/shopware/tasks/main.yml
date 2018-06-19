@@ -1,0 +1,105 @@
+---
+
+- name: download sw cli tools
+  get_url:
+    url: http://shopwarelabs.github.io/sw-cli-tools/sw.phar
+    dest: ~/bin/sw
+    mode: 0755
+  tags: sw-cli-tools
+
+- name: Remove Shopware Source
+  become: yes
+  shell: rm -rf {{ webserver_root }}/{{ shopware_folder }}
+
+- name: Clone Shopware
+  shell: git clone https://github.com/shopware/shopware.git {{ webserver_root }}/{{ shopware_folder }}
+
+- name: Update Shopware repository and checkout your desired version.
+  command: "{{ item }} chdir={{ webserver_root }}/{{ shopware_folder }}"
+  with_items:
+    - git checkout tags/{{ shopware_version }}
+
+- name: Set file permissions for Shopware source
+  become: yes
+  file:
+    path: "{{ webserver_root }}/{{ shopware_folder }}"
+    mode: 0777
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group }}"
+    state: directory
+    force: yes
+    recurse: yes
+
+- name: Copy build.properties file
+  when: shopware_install_mode == "demo" or shopware_install_mode == "clean"
+  template: src=build.properties.j2 dest={{ webserver_root }}/{{ shopware_folder }}/build/build.properties owner=vagrant mode=0775
+  become: yes
+
+- name: Create shopware db
+  when: dbms == "mysql"
+  mysql_db: name={{ shopware_db_name }} state=present
+  become: yes
+
+- name: Create shopware db user
+  when: dbms == "mysql"
+  mysql_user: 
+    name: "{{ shopware_db_username }}"
+    password: "{{ shopware_db_password }}" 
+    priv: "{{ shopware_db_name }}.*:ALL"
+    host: localhost
+    state: present
+  become: yes
+
+- name: Build Shopware
+  when: shopware_install_mode == "demo" or shopware_install_mode == "clean"
+  shell: "{{ item }} chdir={{ webserver_root }}/{{ shopware_folder }}/build"
+  become: yes
+  with_items:
+    - ant build-unit
+
+- name: download shopware demo images
+  when: shopware_install_mode == "demo"
+  get_url:
+    url: http://releases.s3.shopware.com/test_images_since_5.1.zip
+    dest: /tmp/demo_images.zip
+    mode: 0755
+
+- name: unzip shopware demo images
+  when: shopware_install_mode == "demo"
+  command: unzip /tmp/demo_images.zip -d {{ webserver_root }}/{{ shopware_folder }}
+
+- name: create self-signed SSL cert
+  when: webserver == "apache"
+  command: openssl req -new -nodes -x509 -subj "/C=DE/ST=BW/L=Karlsruhe/O=IT/CN=shopware.{{ ansible_fqdn }}" -days 3650 -keyout /etc/apache2/ssl/shopware.key -out /etc/apache2/ssl/shopware.crt -extensions v3_ca creates=/etc/apache2/ssl/shopware.crt
+
+- name: Push shopware virtualhost configuration template
+  template:
+    src=06-shopware.conf.j2
+    dest=/etc/apache2/sites-available/06-shopware.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable Vhost
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 06-shopware
+  become: yes
+  notify:
+  - apache-reload
+
+- name: Set file permissions for Shopware document root
+  file:
+    path: "{{ webserver_root }}/{{ shopware_folder }}/{{ item }}"
+    mode: 0775
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group }}"
+    state: directory
+    force: yes
+    recurse: yes
+  become: yes
+  with_items:
+    - var/cache

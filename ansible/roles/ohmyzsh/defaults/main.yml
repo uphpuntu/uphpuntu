@@ -1,0 +1,15 @@
+---
+
+# Choose user who you want to install oh my zsh for
+ohmyzsh_users:
+  - username: vagrant
+    usergroup: vagrant
+    home: /home/vagrant
+  # - username: uphpuntu
+  #   usergroup: uphpuntu
+  #   home: /home/uphpuntu
+  - username: root
+    usergroup: root
+    home: /root
+
+ohmyzsh_plugins: git colored-man-page sudo

@@ -1,0 +1,63 @@
+---
+
+- name: Remove Pimp my Log Source
+  become: yes
+  shell: rm -rf {{ webserver_root }}/pimpmylog
+
+- name: Clone Pimp my Log
+  shell: git clone https://github.com/potsky/PimpMyLog.git {{ webserver_root }}/pimpmylog
+  become: yes
+
+- name: Update Pimp my Log repository and checkout your desired version.
+  command: "{{ item }} chdir={{ webserver_root }}/pimpmylog"
+  become: yes
+  with_items:
+    - git checkout tags/{{ pimpmylog_version }}
+
+- name: Make the user own the directory
+  file:
+    path: "{{ webserver_root }}/pimpmylog"
+    owner: "{{ webserver_user }}"
+    group: "{{ webserver_group }}"
+    state: directory
+    recurse: yes
+  become: yes
+
+- name: Make the user own the log directory
+  file:
+    path: /var/log/{{ item }}
+    mode: 0777
+    state: directory
+    recurse: yes
+  become: yes
+  with_items:
+    - apache2
+    - uphpuntu
+    - mysql
+
+- name: Make the user own the log directory
+  file:
+    path: /var/log
+    mode: a+r
+    state: directory
+    recurse: yes
+  become: yes
+
+- name: Push default virtualhost configuration template
+  template:
+    src=01-pimpmylog.conf.j2
+    dest=/etc/apache2/sites-available/01-pimpmylog.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable Vhost
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 01-pimpmylog
+  become: yes
+  notify:
+  - apache-reload

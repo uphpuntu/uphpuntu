@@ -1,0 +1,15 @@
+---
+
+- name: download elasticsearch
+  get_url:
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elasticsearch_version }}.deb
+    dest: /tmp/elasticsearch-{{ elasticsearch_version }}.deb
+  tags: composer
+
+- name: install elastic search
+  command: dpkg -i /tmp/elasticsearch-{{ elasticsearch_version }}.deb
+  become: yes
+
+- name: start elastic search
+  command: /etc/init.d/elasticsearch start
+  become: yes

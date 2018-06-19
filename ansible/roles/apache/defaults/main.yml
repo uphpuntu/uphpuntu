@@ -1,0 +1,5 @@
+---
+
+webserver_user: vagrant
+webserver_group: vagrant
+webserver_root: /home/vagrant/www

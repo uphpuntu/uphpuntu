@@ -1,0 +1,91 @@
+---
+
+- name: Set /var/lock/apache2 owner
+  when: webserver == "apache"
+  file: path=/var/lock/apache2 recurse=yes state=directory group={{ webserver_group }} owner={{ webserver_user }}
+  become: yes
+
+- name: Install Apache2
+  when: webserver == "apache"
+  apt: pkg=apache2 state=present
+  become: yes
+
+- name: Set Apache user and group
+  when: webserver == "apache"
+  lineinfile: >
+    dest=/etc/apache2/envvars
+    regexp="{{ item.key }}"
+    line="{{ item.value }}"
+    state=present
+  with_items:
+   - { key: "^export APACHE_RUN_USER=", value: "export APACHE_RUN_USER={{ webserver_user }}" }
+   - { key: "^export APACHE_RUN_GROUP=", value: "export APACHE_RUN_GROUP={{ webserver_group }}" }
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Change mutex setting
+  when: webserver == "apache"
+  lineinfile: >
+    dest=/etc/apache2/apache2.conf
+    regexp="^#Mutex file:${APACHE_LOCK_DIR} default"
+    line="Mutex posixsem"
+    state=present
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Apache | Enable modules
+  when: webserver == "apache"
+  command: a2enmod {{ item }} creates=/etc/apache2/mods-enabled/{{ item }}.load
+  with_items:
+    - rewrite
+    - autoindex
+    - ssl
+  become: yes
+  notify:
+    - apache-restart
+
+- name: Delete default Apache vhost
+  file: path=/etc/apache2/sites-enabled/000-default.conf state=absent
+  become: yes
+  notify: apache-restart
+
+- name: Push default virtualhost configuration template
+  template:
+    src=00-default-vhost.conf.j2
+    dest=/etc/apache2/sites-available/00-default-vhost.conf
+  notify:
+    - apache-restart
+  become: yes
+
+- name: Create ssl directory
+  when: webserver == "apache"
+  file: path=/etc/apache2/ssl state=directory group={{ webserver_group }} owner={{ webserver_user }}
+  become: yes
+
+- name: Apache | Enable Sites
+  when: webserver == "apache"
+  command: a2ensite {{ item }}
+  args:
+      creates: /etc/apache2/sites-enabled/{{ item }}.conf
+  with_items:
+    - 00-default-vhost
+  become: yes
+  notify:
+    - apache-reload
+
+- name: Set /var/log/apache2 owner
+  when: webserver == "apache"
+  file: path=/var/log/apache2 recurse=yes state=directory group={{ webserver_group }} owner={{ webserver_user }}
+  become: yes
+
+- name: Set /var/log/uphpuntu owner
+  when: webserver == "apache"
+  file: path=/var/log/uphpuntu recurse=yes state=directory group={{ webserver_group }} owner={{ webserver_user }}
+  become: yes
+
+- name: be sure apache is started and enabled
+  when: webserver == "apache"
+  service: name=apache2 state=started enabled=yes
+  become: yes

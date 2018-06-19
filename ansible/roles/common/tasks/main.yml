@@ -1,0 +1,87 @@
+---
+
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+  become: yes
+
+- name: upgrade the distro
+  apt: upgrade=yes
+  become: yes
+
+- name: install packages
+  apt: pkg={{ item }} state=latest
+  become: yes
+  with_items:
+    - git
+    - htop
+    - curl
+    - zip
+    - rsync
+    - wget
+    - software-properties-common
+    - openjdk-8-jre
+    - ant
+
+- name: be sure ntp is present
+  apt: pkg=ntp state=present
+  tags: ntp
+  become: yes
+
+- name: be sure ntpd is running and enabled
+  service: name=ntp state=started enabled=yes
+  tags: ntp
+  become: yes
+
+- name: Make sure ~/bin exists
+  file: path=/home/{{ webserver_user }}/bin state=directory
+  become: yes
+
+- name: Copy common files to ~/bin
+  copy: src={{ item }} dest=/home/{{ webserver_user }}/bin/  mode=755
+  become: yes
+  with_fileglob:
+    - bin/*
+
+# - name: Add user group uphpuntu
+#   command: '$(getent group uphpuntu) || groupadd -g 666 uphpuntu'
+#   become: yes
+# - name: Add user uphpuntu
+#   user:
+#     name: uphpuntu
+#     uid: 1010
+#   become: yes
+
+# - name: Copy user dir for uphpuntu user
+#   command: cp -pr /home/vagrant/.ssh/ /home/uphpuntu/
+#   become: yes
+
+# - name: Copy user dir for uphpuntu user
+#   command: cp /home/vagrant/.profile /home/uphpuntu/.profile
+#   become: yes
+
+- name: Make the user own his home directory
+  file:
+    path: /home/{{ webserver_user }}
+    owner: vagrant
+    group: vagrant
+    state: directory
+    recurse: yes
+  become: yes
+
+
+# - name: Add uphpuntu to sudoers list
+#   command: 'echo "%uphpuntu ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/uphpuntu'
+#   become: yes
+
+- name: Add a ~/bin to PATH
+  lineinfile: dest=/home/{{ webserver_user }}/.profile line='PATH="$HOME/bin:$PATH"'
+  become: yes
+
+- name: Changing perm of "/home/{{ webserver_user }}/bin/changephp_apache_X.X.sh", adding "+x"
+  file: dest=/home/{{ webserver_user }}/bin/changephp_apache_{{ item }}.sh mode=a+x owner={{ webserver_user }} group={{ webserver_user }}
+  with_items:
+    - "{{ php_versions}}"
+
+- name: Create log directory
+  file: path=/var/log/uphpuntu owner={{ webserver_user }} group={{ webserver_user }} state=directory
+  become: yes
