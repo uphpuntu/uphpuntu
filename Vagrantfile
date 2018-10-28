@@ -37,8 +37,8 @@ Vagrant.configure("2") do |config|
           "adminer_install" => "yes",
           "phpmyadmin_install" => "yes",
           "shopware_install" => "yes",
-          "shopware_install_mode" => "demo",
-          "shopware_version" => "v5.4.1",
+          "shopware_install_mode" => "clean",
+          "shopware_version" => "v5.5.0-RC1",
           "pimpmylog_install" => "yes",
           "wordpress_install" => "yes",
           "wordpress_install_mode" => "clean",
@@ -49,7 +49,7 @@ Vagrant.configure("2") do |config|
           "ohmyzsh_install" => "yes",
           # Additional DBMSs
           "elasticsearch_install" => "yes",
-          "elasticsearch_version" => "6.2.4",
+          "elasticsearch_version" => "6.3.2",
           "redis_install" => "yes"
         }
     end

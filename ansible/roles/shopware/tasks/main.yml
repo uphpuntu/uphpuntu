@@ -31,7 +31,12 @@
     recurse: yes
 
 - name: Copy build.properties file
-  when: shopware_install_mode == "demo" or shopware_install_mode == "clean"
+  when: shopware_install_mode == "demo"
+  template: src=build.properties.demo.j2 dest={{ webserver_root }}/{{ shopware_folder }}/build/build.properties owner=vagrant mode=0775
+  become: yes
+
+- name: Copy build.properties file
+  when: shopware_install_mode == "clean"
   template: src=build.properties.j2 dest={{ webserver_root }}/{{ shopware_folder }}/build/build.properties owner=vagrant mode=0775
   become: yes
 
@@ -70,7 +75,7 @@
 
 - name: create self-signed SSL cert
   when: webserver == "apache"
-  command: openssl req -new -nodes -x509 -subj "/C=DE/ST=BW/L=Karlsruhe/O=IT/CN=shopware.{{ ansible_fqdn }}" -days 3650 -keyout /etc/apache2/ssl/shopware.key -out /etc/apache2/ssl/shopware.crt -extensions v3_ca creates=/etc/apache2/ssl/shopware.crt
+  command: openssl req -newkey rsa:2048 -nodes -x509 -subj "/C=DE/ST=BW/L=Karlsruhe/O=IT/CN=shopware.{{ ansible_fqdn }}" -days 3650 -keyout /etc/apache2/ssl/shopware.key -out /etc/apache2/ssl/shopware.crt -extensions v3_ca
 
 - name: Push shopware virtualhost configuration template
   template:

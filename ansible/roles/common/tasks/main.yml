@@ -21,6 +21,7 @@
     - software-properties-common
     - openjdk-8-jre
     - ant
+    - sendmail
 
 - name: be sure ntp is present
   apt: pkg=ntp state=present
